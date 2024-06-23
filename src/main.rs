@@ -6,11 +6,11 @@ use itertools::Itertools;
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    #[arg(short = 'k', long, default_value = "1")]
-    max: usize,
+    #[arg(short = 'm', long, default_value = "1")]
+    min: usize,
 
-    #[arg(short = 'm', long)]
-    min: Option<usize>,
+    #[arg(short = 'M', long, default_value = "2")]
+    max: usize,
 
     #[arg(short = 'u', long, default_value = "false")]
     upper: bool,
@@ -27,7 +27,6 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let min = args.min.unwrap_or(args.max);
 
     let words: Vec<_> = io::stdin()
         .lock()
@@ -36,16 +35,16 @@ fn main() {
         .filter(|line| !line.is_empty())
         .collect();
 
-    for k in min..=args.max {
-        for elements in words.clone().into_iter().permutations(k) {
+    for k in args.min..=args.max {
+        for elements in words.iter().permutations(k) {
             let line: String = if args.upper {
                 elements
-                    .into_iter()
+                    .iter()
                     .map(|e| e[0..1].to_uppercase() + &e[1..])
                     .collect::<Vec<_>>()
                     .join(&args.seperator)
             } else {
-                elements.join(&args.seperator)
+                elements.iter().join(&args.seperator)
             };
 
             println!(
