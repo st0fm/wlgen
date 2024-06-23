@@ -1,17 +1,21 @@
 use std::io::{self, BufRead};
 
 use clap::Parser;
+use itertools::Itertools;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    #[arg(short = 'n', long, default_value = "1")]
-    num: u8,
+    #[arg(short = 'k', long, default_value = "1")]
+    max: usize,
 
     #[arg(short = 'm', long)]
-    min: Option<u8>,
+    min: Option<usize>,
 
-    #[arg(short = 's', long, default_value = "/")]
+    #[arg(short = 'u', long, default_value = "false")]
+    upper: bool,
+
+    #[arg(short = 's', long, default_value = "")]
     seperator: String,
 
     #[arg(short = 'p', long, default_value = "")]
@@ -21,23 +25,9 @@ struct Args {
     postfix: String,
 }
 
-fn generate_wordlist(word: &str, wordlist: &[String], seperator: &str) -> Vec<String> {
-    wordlist
-        .iter()
-        .map(|line| {
-            format!(
-                "{line}{seperator}{word}",
-                line = line,
-                seperator = seperator,
-                word = word
-            )
-        })
-        .collect()
-}
-
 fn main() {
     let args = Args::parse();
-    let min = args.min.unwrap_or(args.num);
+    let min = args.min.unwrap_or(args.max);
 
     let words: Vec<_> = io::stdin()
         .lock()
@@ -45,37 +35,24 @@ fn main() {
         .map(|line| line.unwrap())
         .collect();
 
-    let mut tmp_result: Vec<String> = words.clone();
-    let mut result: Vec<String> = Vec::new();
+    for k in min..=args.max {
+        for elements in words.clone().into_iter().permutations(k) {
+            let line: String = if args.upper {
+                elements
+                    .into_iter()
+                    .map(|e| e[0..1].to_uppercase() + &e[1..])
+                    .collect::<Vec<_>>()
+                    .join(&args.seperator)
+            } else {
+                elements.join(&args.seperator)
+            };
 
-    for round in 1..args.num {
-        let mut tmp: Vec<String> = Vec::new();
-
-        if round >= min {
-            result.extend(tmp_result.clone());
-        }
-
-        for word in &words {
-            tmp.extend(generate_wordlist(word, &tmp_result, &args.seperator));
-        }
-        tmp_result = tmp;
-    }
-
-    result.append(&mut tmp_result);
-
-    let result: Vec<String> = result
-        .into_iter()
-        .map(|line| {
-            format!(
+            println!(
                 "{prefix}{line}{postfix}",
                 prefix = &args.prefix,
                 line = line,
                 postfix = &args.postfix
-            )
-        })
-        .collect();
-
-    for word in &result {
-        println!("{}", word);
+            );
+        }
     }
 }
