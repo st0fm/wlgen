@@ -18,9 +18,9 @@ struct Args {
     postfix: String,
 }
 
-fn generate_wordlist(word: &str, wordlist: &Vec<String>, seperator: &str) -> Vec<String> {
+fn generate_wordlist(word: &str, wordlist: &[String], seperator: &str) -> Vec<String> {
     wordlist
-        .into_iter()
+        .iter()
         .map(|line| {
             format!(
                 "{line}{seperator}{word}",
