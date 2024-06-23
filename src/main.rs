@@ -40,6 +40,7 @@ fn main() {
             let line: String = if args.upper {
                 elements
                     .into_iter()
+                    .filter(|e| !e.is_empty())
                     .map(|e| e[0..1].to_uppercase() + &e[1..])
                     .collect::<Vec<_>>()
                     .join(&args.seperator)
