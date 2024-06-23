@@ -8,6 +8,9 @@ struct Args {
     #[arg(short = 'n', long, default_value = "1")]
     num: u8,
 
+    #[arg(short = 'm', long)]
+    min: Option<u8>,
+
     #[arg(short = 's', long, default_value = "/")]
     seperator: String,
 
@@ -34,21 +37,31 @@ fn generate_wordlist(word: &str, wordlist: &[String], seperator: &str) -> Vec<St
 
 fn main() {
     let args = Args::parse();
+    let min = args.min.unwrap_or(args.num);
+
     let words: Vec<_> = io::stdin()
         .lock()
         .lines()
         .map(|line| line.unwrap())
         .collect();
 
-    let mut result: Vec<String> = words.clone();
+    let mut tmp_result: Vec<String> = words.clone();
+    let mut result: Vec<String> = Vec::new();
 
-    for _ in 0..args.num {
-        let mut tmp_result: Vec<String> = Vec::new();
-        for word in &words {
-            tmp_result.append(&mut generate_wordlist(word, &result, &args.seperator));
+    for round in 1..args.num {
+        let mut tmp: Vec<String> = Vec::new();
+
+        if round >= min {
+            result.extend(tmp_result.clone());
         }
-        result = tmp_result;
+
+        for word in &words {
+            tmp.extend(generate_wordlist(word, &tmp_result, &args.seperator));
+        }
+        tmp_result = tmp;
     }
+
+    result.append(&mut tmp_result);
 
     let result: Vec<String> = result
         .into_iter()
